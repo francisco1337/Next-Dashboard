@@ -1,36 +1,39 @@
-import { Pokemon } from "@/app/pokemons";
+import { Pokemon, PokemonsResponse } from "@/app/pokemons";
 import { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
 interface Props {
-  params: { id: string }
+  params: { name: string }
 }
+
 
 
 // SOLO EJECUCION EN BUILD TIME
 export async function generateStaticParams(){
+  const data:PokemonsResponse = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=151`)
+  .then(res => res.json());
 
-  const static151Pokemons = Array.from({length:151}).map((v,i)=>`${i+1}`);
+  const statis151Pokemons = data.results.map((pokemon)=>{
+    name:pokemon.name
+  });
 
-
-
-  return static151Pokemons.map(id=>{
-    id:id
-  })
+  return statis151Pokemons.map( (name)=>({
+    name:name
+  }))
 }
 
 
-export async function generateMetadata({ params: { id } }: Props): Promise<Metadata> {
+export async function generateMetadata({ params: { name } }: Props): Promise<Metadata> {
 
   try {
-    const { id: id_pokemon, name } = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
+    const { id: id_pokemon, name:name_pokemon } = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`, {
       // cache: "force-cache" // TODO: CAMBIAR ESTO EN UN FUTURO
     }).then(resp => resp.json());
 
     return {
-      title: `#${id_pokemon} - ${name}`,
-      description: ` Página del pokemon ${name}`
+      title: `#${id_pokemon} - ${name_pokemon}`,
+      description: ` Página del pokemon ${name_pokemon}`
     }
   } catch (error) {
     return {
@@ -41,10 +44,10 @@ export async function generateMetadata({ params: { id } }: Props): Promise<Metad
   
 }
 
-const getPokemon = async (id: string): Promise<Pokemon> => {
+const getPokemon = async (name: string): Promise<Pokemon> => {
 
   try {
-    const pokemon = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
+    const pokemon = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`, {
       cache: "force-cache" // TODO: CAMBIAR ESTO EN UN FUTURO
     }).then(resp => resp.json());
 
@@ -62,7 +65,7 @@ const getPokemon = async (id: string): Promise<Pokemon> => {
 
 export default async function PokemonPage({ params }: Props) {
 
-  const pokemon = await getPokemon(params.id);
+  const pokemon = await getPokemon(params.name);
 
 
   return (
